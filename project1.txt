@@ -1,0 +1,228 @@
+create database LibraryDB
+USE LibraryDB;
+Create table  Library (
+    LibraryID int Identity(1,1) Primary KEY,
+    Name Nvarchar(50) NOT NULL unique,
+    Location Nvarchar(100) NOT NULL,
+    ContactNumber Nvarchar(30) NOT NULL,
+    EstablishedYear int,
+);
+Create table Members (
+    MemberID int Identity(1,1) Primary KEY,
+    FullName Varchar(50),
+    Email Varchar(50) NOT NULL unique,
+    PhoneNumber Varchar(20),
+    MembershipStartDate date NOT NULL
+);
+Create table Book (
+    BookID int identity(1,1) Primary KEY,
+    ISBN Varchar(30) NOT NULL unique,
+    Title Varchar(100) NOT NULL,
+    Genre Varchar(30) NOT NULL,
+    Price decimal(10,2) check(Price > 0),
+    ShelfLocation Varchar(40) NOT NULL,
+    IsAvailable Bit NOT NULL default 1,
+    LibraryID int NOT NULL,
+
+     Check (Genre IN ('Fiction','Non-fiction','Reference','Children')),
+
+    
+        Foreign  KEY (LibraryID) references Library(LibraryID)
+        
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+Create table Staff (
+    StaffID int identity(1,1) Primary KEY,
+    FullName Varchar(50),
+    Position Varchar(50),
+    ContactNumber Varchar(30),
+    LibraryID int NOT NULL,
+
+    Foreign key (LibraryID) References Library(LibraryID)
+        ON DELETE CASCADE
+		ON UPDATE CASCADE
+        );
+Create table Loan (
+    LoanID int identity(1,1) Primary KEY,
+    LoanDate date NOT NULL,
+    DueDate date NOT NULL,
+    ReturnDate date,
+    Status Varchar(30) NOT NULL Default 'Issued',
+    BookID int NOT NULL,
+    MemberID int NOT NULL,
+
+  CHECK (Status IN ('Issued','Returned','Overdue')),
+  CHECK ( ReturnDate >= LoanDate),
+Foreign key (BookID) References Book(BookID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+Foreign key (MemberID) References Members(MemberID)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+Create table  Payment (
+    PaymentID int identity (1,1) Primary KEY,
+    LoanID int NOT NULL,
+    PaymentDate date NOT NULL,
+    Amount Decimal(10,1) NOT NULL Check(Amount > 0),
+    Method Varchar(40),
+Foreign key(LoanID) References Loan(LoanID)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+Create table Review (
+    ReviewID int identity(1,1) Primary KEY,
+    MemberID int NOT NULL,
+    BookID int NOT NULL,
+    ReviewDate date NOT NULL,
+    Comments Varchar(200) Default 'No comments',
+    Rating int NOT NULL,
+ CHECK (Rating between 1 and 5),
+ Foreign key (MemberID)References Members(MemberID)
+ ON DELETE CASCADE
+ ON UPDATE CASCADE,
+ Foreign key (BookID) References Book(BookID)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE
+);
+Insert into Library (Name, Location, ContactNumber, EstablishedYear)
+VALUES 
+('Library1', 'Muscat', '96899', 2000),
+('Library2', 'Nizwa', '96899', 1998),
+('Library3', 'Sewaq', '98756' ,19992),
+('Library4', 'Sohar' ,'99888' ,1886);
+Insert into Members (FullName, Email, PhoneNumber, MembershipStartDate)
+VALUES ('Ali Mohamm', 'ali.Mohamm@email.com', '9686888', '2025-01-01'),
+('Ahmed Mohamm' ,'Ahmed.Mohamm@email.com' ,'97645377' ,'2025-02-02'),
+('mohamm Ali' ,'mohamm.Ali@email.com' ,'98765444' ,'2025-03-06'),
+('Mobark Mohamm', 'Mobark.Mohamm@email.com','9999555','2025-04-07');
+Insert into Book (ISBN, Title, Genre, Price, ShelfLocation, LibraryID)
+VALUES
+('978999', 'DATABASE', 'Fiction', 25.10,'A1-1' ,1),
+('978011', 'baby', 'Children', 12.15 ,'A2-2' ,2),
+('987641' ,'ALgabra' ,'Non-fiction' ,14.10 ,'B1-1',3),
+('876781' ,'Islamic' ,'Reference' ,13.15 ,'B2-2' ,4);
+Insert into Staff (FullName, Position, ContactNumber, LibraryID)
+VALUES
+('Hamad Al-Sayed', 'Librarian', '9976549', 1),
+('Sara albloshi', 'Assistant Librarian', '9329875', 2),
+('Said Al-Harthy', 'Archivist', '9427927', 3),
+('Laila Al-dohli', 'Library Technician', '9856432', 4);
+Insert into Loan (LoanDate, DueDate, ReturnDate, Status, BookID, MemberID)
+VALUES ('2025-08-01', '2025-12-24', NULL, 'Issued', 3, 1),
+('2025-09-02', '2025-09-10',NULL, 'Issued',4 ,2 ), 
+('2025-10-11' ,'2025-10-13',NULL, 'Issued',5,3),
+('2025-11-11' ,'2025-11-16',NULL, 'Issued',6,4);
+Insert into Payment (LoanID, PaymentDate, Amount, Method)
+VALUES (1, '2025-11-11', 50.0, 'Cash'),
+(2,'2025-11-12',40.0,'Cash'),
+(3,'2025-11-13',30.0,'Cash'),
+(4,'2025-11-14',50.0,'Cash');
+Insert into Review (MemberID, BookID, ReviewDate, Rating)
+VALUES (1, 3, '2025-11-17',2), 
+(2 ,4,'2025-11-18' , 3),
+(3 ,5,'2025-11-19' ,4),
+(4 ,6,'2025-11-20',5);
+
+--Display all book records.----
+SELECT * 
+FROM Book;
+--Display each book’s title, genre, and availability--
+SELECT 
+    Title,
+    Genre,
+    IsAvailable
+FROM Book;
+--Display all member names, email, and membership start date--
+SELECT 
+    FullName,
+    Email,
+    MembershipStartDate
+FROM Members;
+--Display each book’s title and price as BookPrice--
+SELECT 
+    Title,
+    Price AS BookPrice
+FROM Book;
+--List books priced above 250 LE--
+SELECT  Price AS BookPrice
+From Book
+WHERE Price > 250;
+--List members who joined before 2023--
+SELECT *
+FROM Members
+WHERE MembershipStartDate < '2023-01-01';
+--Display books published after 2018--
+--Display books ordered by price descending.--
+SELECT *
+FROM Book
+ORDER BY Price DESC;
+--Display the maximum, minimum, and average book price.--
+SELECT 
+    MAX(Price) AS MaxPrice,
+    MIN(Price) AS MinPrice,
+    AVG(Price) AS AveragePrice
+FROM Book;
+--Display total number of books--
+SELECT COUNT(*) AS TotalBooks
+FROM Book;
+--Display members with NULL email.--
+SELECT *
+FROM Members
+WHERE Email IS NULL;
+--Display books whose title contains 'Data'--
+SELECT *
+FROM Book
+WHERE Title LIKE '%Data%';
+-- Insert yourself as a member (Member ID = 405)--
+
+SET IDENTITY_INSERT Members ON;
+Insert into  Members (MemberID, FullName, Email, PhoneNumber, MembershipStartDate)
+VALUES (405, 'Moza Mohammed', 'Moza@gmail.com', '99667788', '2025-01-12');
+SET IDENTITY_INSERT Members OFF;
+-- Register yourself to borrow book ID 1011--
+Insert into Loan (LoanDate, DueDate, ReturnDate, Status, BookID, MemberID)
+VALUES ('2025-08-11', '2025-12-24', NULL, 'Issued', 3, 405);
+-- Insert another member with NULL email and phone.--
+Insert into  Members (FullName, Email, PhoneNumber, MembershipStartDate)
+VALUES ('Ahmed Ali', NULL, NULL, '2025-12-18');
+-- Update the return date of your loan to today.--
+UPDATE Loan
+SET ReturnDate = CAST(GETDATE() AS DATE)
+WHERE MemberID = 405   
+  AND ReturnDate IS NULL;
+  select * from Loan
+  --Increase book prices by 5% for books priced under 200---
+  UPDATE Book
+SET Price = Price * 1.05
+WHERE Price < 200;
+--Update member status to 'Active' for recently joined members--
+UPDATE Members
+SET Status = 'Active'
+WHERE MembershipStartDate >= DATEADD(day, -30, GETDATE());
+SElect *from Members---not have colum name Status---
+--Delete members who never borrowed a book---
+
+ DELETE FROM Members
+WHERE MemberID NOT IN (
+    SELECT DISTINCT MemberID
+    FROM Loan
+);
+
+select* from Members
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
